@@ -139,6 +139,24 @@ public class GameManager : MonoBehaviour
     [Range(0f, 1f)] public float fanMinVolume = 0f;
     [Range(0f, 1f)] public float fanMaxVolume = 1f;
 
+    // ---------- GAME OVER LOOP AUDIO ----------
+    [Header("Game Over Loop Audio")]
+    [Tooltip("Looping wind ambience that plays on game over")]
+    public AudioSource gameOverWindSource;
+
+    [Tooltip("Looping game-over music that plays on game over")]
+    public AudioSource gameOverSongSource;
+
+    [Range(0f, 1f)]
+    public float gameOverWindTargetVolume = 0.6f;
+
+    [Range(0f, 1f)]
+    public float gameOverSongTargetVolume = 0.7f;
+
+    [Tooltip("Fade-in duration for game-over wind & song")]
+    public float gameOverAudioFadeInDuration = 2.0f;
+
+
     [Header("Virus Spawn SFX Tuning")]
     [Range(0f, 1f)]
     public float virusSpawnVolume = 0.35f;   // overall volume of spawn pings
@@ -271,6 +289,12 @@ public class GameManager : MonoBehaviour
             explosionOverlay.gameObject.SetActive(false);
         }
 
+        // hide game-over panel at start
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+
         // make sure fade-to-black starts invisible but active
         if (fadeToBlackOverlay != null)
         {
@@ -292,11 +316,25 @@ public class GameManager : MonoBehaviour
             fanSource.volume = fanMinVolume;
         }
 
-        // >>> ADD THIS <<<
+        // make sure game-over loops are silent and stopped at start
+        if (gameOverWindSource != null)
+        {
+            gameOverWindSource.volume = 0f;
+            gameOverWindSource.loop = true;
+            gameOverWindSource.Stop();
+        }
+
+        if (gameOverSongSource != null)
+        {
+            gameOverSongSource.volume = 0f;
+            gameOverSongSource.loop = true;
+            gameOverSongSource.Stop();
+        }
+
+        // start main music + ambience
         if (musicSource != null)
         {
             musicSource.loop = true;
-            // start clean every run
             musicSource.pitch = 1f;
             if (!musicSource.isPlaying)
                 musicSource.Play();
@@ -313,6 +351,9 @@ public class GameManager : MonoBehaviour
         RebuildAdTypeLists();
         UpdateTempUI();
         UpdatePowerupUI();
+
+        // ensure time is running at start (was accidentally 0 before)
+        Time.timeScale = 1f;
     }
 
     void RebuildAdTypeLists()
@@ -958,7 +999,7 @@ public class GameManager : MonoBehaviour
             StartCoroutine(FadeAudioOut(fanSource, fanFadeOutDuration));
         }
 
-            // vinyl-stop fade for music and ambience
+        // vinyl-stop fade for music and ambience
         if (musicSource != null && musicFadeOutDuration > 0f)
             StartCoroutine(FadeOutPitchAndVolume(musicSource, musicFadeOutDuration));
 
@@ -1032,7 +1073,6 @@ public class GameManager : MonoBehaviour
         }
 
         // set texts separately
-        // set texts separately
         if (gameOverTitleText != null)
         {
             gameOverTitleText.text = reason;
@@ -1048,27 +1088,23 @@ public class GameManager : MonoBehaviour
         }
 
 
-        // make sure restart button is active and cache its base scale for breathing
-        // ---- RESTART BUTTON FIX (explicit position + always visible) ----
+        // restart button
         if (restartButton != null)
         {
             restartButton.gameObject.SetActive(true);
 
-            // force position so it never overlaps the text again
             RectTransform rt = restartButton.GetComponent<RectTransform>();
             if (rt != null)
-                rt.anchoredPosition = new Vector2(0f, -200f);   // <<< adjust height here
+                rt.anchoredPosition = new Vector2(0f, -200f);
 
-            // make sure scale is correct (fixes case where it's invisible)
             if (restartButton.transform.localScale == Vector3.zero)
                 restartButton.transform.localScale = Vector3.one;
 
-            // update breathing effect baseline
             restartBaseScale = restartButton.transform.localScale;
         }
 
-                // menu button (a bit under restart)
-        Vector2 menuPos = new Vector2(0f, -300);   // tweak Y to move it up/down
+        // menu button (a bit under restart)
+        Vector2 menuPos = new Vector2(0f, -300f);
 
         if (menuButton != null)
         {
@@ -1087,7 +1123,6 @@ public class GameManager : MonoBehaviour
         gameOverHoverTimer = 0f;
 
 
-
         t = 0f;
         while (t < gameOverTextFadeDuration)
         {
@@ -1100,9 +1135,58 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
+        // start game-over wind & song loops (fade in)
+        StartGameOverLoopAudio();
+
         // 5) finally, hard freeze everything (hover uses unscaled time)
         Time.timeScale = 0f;
     }
+
+    void StartGameOverLoopAudio()
+    {
+        // wind
+        if (gameOverWindSource != null)
+        {
+            gameOverWindSource.volume = 0f;
+            if (!gameOverWindSource.isPlaying)
+                gameOverWindSource.Play();
+
+            StartCoroutine(FadeAudioIn(gameOverWindSource, gameOverWindTargetVolume, gameOverAudioFadeInDuration));
+        }
+
+        // song
+        if (gameOverSongSource != null)
+        {
+            gameOverSongSource.volume = 0f;
+            if (!gameOverSongSource.isPlaying)
+                gameOverSongSource.Play();
+
+            StartCoroutine(FadeAudioIn(gameOverSongSource, gameOverSongTargetVolume, gameOverAudioFadeInDuration));
+        }
+    }
+
+
+    IEnumerator FadeAudioIn(AudioSource src, float targetVolume, float duration)
+    {
+        if (src == null) yield break;
+
+        duration = Mathf.Max(0.01f, duration);
+        float t = 0f;
+
+        // start from silent
+        src.volume = 0f;
+
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / duration);
+            src.volume = Mathf.Lerp(0f, targetVolume, k);
+            yield return null;
+        }
+
+        src.volume = targetVolume;
+    }
+
 
     IEnumerator FadeAudioOut(AudioSource src, float duration)
     {
