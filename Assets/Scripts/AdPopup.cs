@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class AdPopup : MonoBehaviour
 {
@@ -19,7 +20,7 @@ public class AdPopup : MonoBehaviour
     public bool autoDespawn = false;
     public float autoDespawnTime = 6f;
 
-    // ───── Extra Behaviours (you already had) ─────
+    // ───── Extra Behaviours ─────
     [Header("Movement")]
     public bool isMovingAd = false;
     public float moveSpeed = 45f;
@@ -40,11 +41,18 @@ public class AdPopup : MonoBehaviour
     public float runSpeed = 200f;
     public float cursorRunDistance = 110f;
 
-    // ───── NEW: open / close animations ─────
+    // ───── OPEN / CLOSE ANIMATION ─────
     [Header("Open / Close Animation")]
-    public float spawnScale = 0.2f;      // start at 20% size, grow to 100%
-    public float openDuration = 0.18f;   // seconds
-    public float closeDuration = 0.16f;  // seconds
+    public float spawnScale = 0.2f;
+    public float openDuration = 0.18f;
+    public float closeDuration = 0.16f;
+
+    // ───── BOMB FLASHING ─────
+    [Header("Bomb Flashing")]
+    public bool bombFlash = true;
+    public Image bombFlashTarget;          // usually the background panel image
+    public Color bombFlashColor = Color.red;
+    public float bombFlashSpeed = 6f;
 
     RectTransform rt;
     float lifeTimer = 0f;
@@ -60,6 +68,9 @@ public class AdPopup : MonoBehaviour
     bool isClosing = false;
     float closeTimer = 0f;
     Action onCloseFinished;
+
+    Color bombBaseColor;
+    bool bombColorCached = false;
 
     void Awake()
     {
@@ -77,20 +88,26 @@ public class AdPopup : MonoBehaviour
         if (GameManager.Instance != null && rt != null)
             GameManager.Instance.SnapPopupInside(rt);
 
-        // start tiny, then grow
+        // start small → grow
         rt.localScale = baseScale * spawnScale;
         isOpening = true;
         openTimer = 0f;
 
         if (isMovingAd)
             PickNewDriftPoint();
+
+        if (bombFlashTarget != null)
+        {
+            bombBaseColor = bombFlashTarget.color;
+            bombColorCached = true;
+        }
     }
 
     void Update()
     {
         float dt = Time.deltaTime;
 
-        // ───── Auto despawn ─────
+        // auto despawn (bomb/cascade you ignore)
         if (autoDespawn && !isClosing)
         {
             lifeTimer += dt;
@@ -105,7 +122,7 @@ public class AdPopup : MonoBehaviour
             }
         }
 
-        // ───── Movement / drift ─────
+        // movement
         if (isMovingAd && !isClosing)
         {
             driftTimer += dt;
@@ -125,7 +142,7 @@ public class AdPopup : MonoBehaviour
                 GameManager.Instance.SnapPopupInside(rt);
         }
 
-        // ───── Run away from cursor ─────
+        // run from cursor
         if (runFromCursor && !isClosing && GameManager.Instance != null)
         {
             Vector2 mouseLocal;
@@ -145,10 +162,10 @@ public class AdPopup : MonoBehaviour
             }
         }
 
-        // ───── Breathing + rotation + open/close scale ─────
+        // animations (scale + breathing)
         float scaleFactor = 1f;
 
-        // opening (spawn grow)
+        // opening grow
         if (isOpening)
         {
             openTimer += dt;
@@ -158,12 +175,10 @@ public class AdPopup : MonoBehaviour
             scaleFactor *= openScale;
 
             if (t >= 1f)
-            {
                 isOpening = false;
-            }
         }
 
-        // closing (shrink away)
+        // closing shrink
         if (isClosing)
         {
             closeTimer += dt;
@@ -174,7 +189,6 @@ public class AdPopup : MonoBehaviour
 
             if (t >= 1f)
             {
-                // end of close animation
                 if (onCloseFinished != null)
                     onCloseFinished();
                 Destroy(gameObject);
@@ -182,14 +196,13 @@ public class AdPopup : MonoBehaviour
             }
         }
 
-        // breathing multiplier
+        // breathing
         if (breathing && !isClosing)
         {
             float breathe = 1f + Mathf.Sin(Time.time * breathingSpeed) * breathingStrength;
             scaleFactor *= breathe;
         }
 
-        // apply final scale
         rt.localScale = baseScale * scaleFactor;
 
         // rotation
@@ -197,11 +210,29 @@ public class AdPopup : MonoBehaviour
         {
             rt.Rotate(0f, 0f, rotationSpeed * dt);
         }
+
+        // bomb flashing
+        if (bombFlash && adType == AdType.Bomb && bombFlashTarget != null && !isClosing)
+        {
+            if (!bombColorCached)
+            {
+                bombBaseColor = bombFlashTarget.color;
+                bombColorCached = true;
+            }
+
+            float t = (Mathf.Sin(Time.time * bombFlashSpeed) + 1f) * 0.5f; // 0..1
+            bombFlashTarget.color = Color.Lerp(bombBaseColor, bombFlashColor, t);
+        }
+        else if (bombFlashTarget != null && bombColorCached)
+        {
+            // keep it at base color (for non-bombs or while closing)
+            bombFlashTarget.color = bombBaseColor;
+        }
     }
 
     void PickNewDriftPoint()
     {
-        Vector2 randomOffset = UnityEngine.Random.insideUnitCircle * driftDistance;
+        Vector2 randomOffset = Random.insideUnitCircle * driftDistance;
         driftTarget = rt.anchoredPosition + randomOffset;
     }
 
@@ -210,29 +241,23 @@ public class AdPopup : MonoBehaviour
         if (GameManager.Instance == null || isClosing)
             return;
 
+        // play close sound
+        GameManager.Instance.PlayAdCloseSfx();
+
         Action cb = null;
 
         switch (adType)
         {
             case AdType.Normal:
-                cb = () =>
-                {
-                    GameManager.Instance.OnPopupClosed(this);
-                };
+                cb = () => GameManager.Instance.OnPopupClosed(this);
                 break;
 
             case AdType.Bomb:
-                cb = () =>
-                {
-                    GameManager.Instance.OnBombAdClicked(this);
-                };
+                cb = () => GameManager.Instance.OnBombAdClicked(this);
                 break;
 
             case AdType.Cascade:
-                cb = () =>
-                {
-                    GameManager.Instance.OnCascadeAdClosed(this);
-                };
+                cb = () => GameManager.Instance.OnCascadeAdClosed(this);
                 break;
         }
 

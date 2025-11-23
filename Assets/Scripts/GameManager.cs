@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;   // always use Unity's Random
 
 public class GameManager : MonoBehaviour
 {
@@ -60,16 +61,16 @@ public class GameManager : MonoBehaviour
     // ---------- POWERUPS ----------
     [Header("Powerup Settings")]
     public float freezeDurationSeconds = 6f;
-    public float coolAmount = 18f;       // °C reduction
-    public float clearAllTempBonus = 0f; // optional cooling when clearing all
+    public float coolAmount = 18f;
+    public float clearAllTempBonus = 0f;
 
     bool tempFrozen = false;
     float freezeTimer = 0f;
 
     // ---------- HEAT VFX ----------
     [Header("Heat Visuals")]
-    public Image heatOverlay;           // red full-screen image
-    public RectTransform shakeRoot;     // UIRoot
+    public Image heatOverlay;
+    public RectTransform shakeRoot;
     [Range(0f, 1f)] public float shakeStartNormalized = 0.6f;
     public float shakeMaxAmplitude = 12f;
     [Range(0f, 1f)] public float overlayMaxAlpha = 0.45f;
@@ -79,20 +80,24 @@ public class GameManager : MonoBehaviour
     // ---------- AUDIO ----------
     [Header("Audio")]
     [Tooltip("AudioSource with NO clip, PlayOnAwake OFF, Loop OFF")]
-    public AudioSource virusSfxSource;          // plays one-shot virus sounds
-    [Tooltip("3+ different virus spawn clips")]
-    public List<AudioClip> virusSpawnClips;     // random per spawn
+    public AudioSource virusSfxSource;               // shared one-shot source
+
+    [Tooltip("Clips used when a popup SPAWNS")]
+    public List<AudioClip> virusSpawnClips;
+
+    [Tooltip("Clips used when the player CLOSES a popup")]
+    public List<AudioClip> adCloseClips;
 
     [Tooltip("AudioSource with pcFanLoop clip, PlayOnAwake ON, Loop ON")]
-    public AudioSource fanSource;               // looping fan hum
+    public AudioSource fanSource;
     [Range(0f, 1f)] public float fanMinVolume = 0f;
     [Range(0f, 1f)] public float fanMaxVolume = 1f;
 
     // ---------- INTERNAL STATE ----------
     List<AdPopup> activeAds = new List<AdPopup>();
-    List<GameObject> normalPrefabs = new List<GameObject>();
-    List<GameObject> bombPrefabs   = new List<GameObject>();
-    List<GameObject> cascadePrefabs= new List<GameObject>();
+    List<GameObject> normalPrefabs  = new List<GameObject>();
+    List<GameObject> bombPrefabs    = new List<GameObject>();
+    List<GameObject> cascadePrefabs = new List<GameObject>();
 
     float elapsedTime = 0f;
     float spawnDifficultyTime = 0f;
@@ -124,11 +129,9 @@ public class GameManager : MonoBehaviour
         if (bestText != null)
             bestText.text = "best: " + FormatTime(best);
 
-        // base position for shaking
         if (shakeRoot != null)
             shakeBasePos = shakeRoot.anchoredPosition;
 
-        // fan setup
         if (fanSource != null)
         {
             if (fanSource.clip != null && !fanSource.isPlaying)
@@ -136,9 +139,7 @@ public class GameManager : MonoBehaviour
             fanSource.volume = fanMinVolume;
         }
 
-        // categorize ad prefabs by type once at startup
         RebuildAdTypeLists();
-
         UpdateTempUI();
     }
 
@@ -208,7 +209,6 @@ public class GameManager : MonoBehaviour
         GameObject prefab = PickAdPrefabByRarity();
         if (prefab == null)
         {
-            // fallback: just random from all
             if (adPrefabs.Count == 0) return;
             prefab = adPrefabs[Random.Range(0, adPrefabs.Count)];
         }
@@ -218,41 +218,29 @@ public class GameManager : MonoBehaviour
 
     GameObject PickAdPrefabByRarity()
     {
-        // compute total weight based on which lists actually exist
         float nW = (normalPrefabs.Count  > 0) ? Mathf.Max(0f, normalWeight)  : 0f;
         float bW = (bombPrefabs.Count    > 0) ? Mathf.Max(0f, bombWeight)    : 0f;
         float cW = (cascadePrefabs.Count > 0) ? Mathf.Max(0f, cascadeWeight) : 0f;
 
         float total = nW + bW + cW;
-        if (total <= 0.0001f)
-        {
-            return null;
-        }
+        if (total <= 0.0001f) return null;
 
         float r = Random.value * total;
 
-        // pick type
         if (r < nW && normalPrefabs.Count > 0)
-        {
             return normalPrefabs[Random.Range(0, normalPrefabs.Count)];
-        }
         r -= nW;
 
         if (r < bW && bombPrefabs.Count > 0)
-        {
             return bombPrefabs[Random.Range(0, bombPrefabs.Count)];
-        }
         r -= bW;
 
         if (cascadePrefabs.Count > 0)
-        {
             return cascadePrefabs[Random.Range(0, cascadePrefabs.Count)];
-        }
 
         return null;
     }
 
-    // common instantiate logic
     void SpawnPopupFromPrefab(GameObject prefab)
     {
         GameObject go = Instantiate(prefab, popupArea);
@@ -265,18 +253,14 @@ public class GameManager : MonoBehaviour
         AdPopup popup = go.GetComponent<AdPopup>();
         if (popup != null)
         {
-            // apply extra behaviours only to NORMAL ads
             if (popup.adType == AdPopup.AdType.Normal)
             {
                 if (Random.value < movingChance)
                     popup.isMovingAd = true;
-
                 if (Random.value < breathingChance)
                     popup.breathing = true;
-
                 if (Random.value < rotatingChance)
                     popup.rotating = true;
-
                 if (Random.value < runAwayChance)
                     popup.runFromCursor = true;
             }
@@ -287,7 +271,6 @@ public class GameManager : MonoBehaviour
         PlayVirusSpawnSfx();
     }
 
-    // spawn N normal ads (used by cascade)
     public void SpawnMultipleNormalAds(int count)
     {
         if (normalPrefabs.Count == 0)
@@ -306,14 +289,13 @@ public class GameManager : MonoBehaviour
 
     Vector2 RandomInsidePopupArea(RectTransform popupRt)
     {
-        Rect areaRect = popupArea.rect;
-        float parentWidth = areaRect.width;
+        float parentWidth  = popupArea.rect.width;
         float parentHeight = popupArea.rect.height;
 
         float halfW = popupRt.rect.width / 2f;
         float halfH = popupRt.rect.height / 2f;
 
-        float maxX = parentWidth / 2f - halfW - spawnPadding;
+        float maxX = parentWidth  / 2f - halfW - spawnPadding;
         float maxY = parentHeight / 2f - halfH - spawnPadding;
 
         float x = Random.Range(-maxX, maxX);
@@ -324,14 +306,13 @@ public class GameManager : MonoBehaviour
 
     public void SnapPopupInside(RectTransform popupRt)
     {
-        Rect areaRect = popupArea.rect;
-        float parentWidth = popupArea.rect.width;
+        float parentWidth  = popupArea.rect.width;
         float parentHeight = popupArea.rect.height;
 
         float halfW = popupRt.rect.width / 2f;
         float halfH = popupRt.rect.height / 2f;
 
-        float maxX = parentWidth / 2f - halfW - spawnPadding;
+        float maxX = parentWidth  / 2f - halfW - spawnPadding;
         float maxY = parentHeight / 2f - halfH - spawnPadding;
 
         Vector2 pos = popupRt.anchoredPosition;
@@ -342,18 +323,16 @@ public class GameManager : MonoBehaviour
 
     // ================== POPUP CALLBACKS ==================
 
-    // normal safe ad closed by player
     public void OnPopupClosed(AdPopup popup)
     {
         if (activeAds.Contains(popup))
             activeAds.Remove(popup);
 
-        temp += tempOnAdClose;              // cooling reward
+        temp += tempOnAdClose;
         temp = Mathf.Clamp(temp, 0f, tempMax);
         UpdateTempUI();
     }
 
-    // bomb ad clicked by player
     public void OnBombAdClicked(AdPopup popup)
     {
         if (activeAds.Contains(popup))
@@ -362,27 +341,23 @@ public class GameManager : MonoBehaviour
         TriggerGameOver("you clicked a malware bomb ad!");
     }
 
-    // cascade ad closed by player
     public void OnCascadeAdClosed(AdPopup popup)
     {
         if (activeAds.Contains(popup))
             activeAds.Remove(popup);
 
-        // still give some cooling for closing it
         temp += tempOnAdClose;
         temp = Mathf.Clamp(temp, 0f, tempMax);
         UpdateTempUI();
 
-        int extraCount = Random.Range(5, 16);   // 5 to 15
+        int extraCount = Random.Range(5, 16);
         SpawnMultipleNormalAds(extraCount);
     }
 
-    // auto-despawned (bomb/cascade you avoided)
     public void OnAdAutoDespawn(AdPopup popup)
     {
         if (activeAds.Contains(popup))
             activeAds.Remove(popup);
-        // no temp change
     }
 
     // ================== TEMPERATURE ==================
@@ -411,9 +386,7 @@ public class GameManager : MonoBehaviour
         UpdateTempUI();
 
         if (temp >= tempMax)
-        {
             TriggerGameOver("your pc overheated!");
-        }
     }
 
     void UpdateTempUI()
@@ -437,7 +410,6 @@ public class GameManager : MonoBehaviour
         float heat01 = Mathf.InverseLerp(shakeStartNormalized, 1f, tNorm);
         heat01 = Mathf.Clamp01(heat01);
 
-        // red tint
         if (heatOverlay != null)
         {
             Color c = heatOverlay.color;
@@ -445,28 +417,35 @@ public class GameManager : MonoBehaviour
             heatOverlay.color = c;
         }
 
-        // shake
         if (shakeRoot != null)
         {
             Vector2 randomOffset = Random.insideUnitCircle * (shakeMaxAmplitude * heat01);
             shakeRoot.anchoredPosition = shakeBasePos + randomOffset;
         }
 
-        // fan volume
         UpdateFanVolume(heat01);
     }
 
-    // ================== AUDIO HELPERS ==================
+    // ================== AUDIO ==================
 
     void PlayVirusSpawnSfx()
     {
         if (virusSfxSource == null) return;
         if (virusSpawnClips == null || virusSpawnClips.Count == 0) return;
 
-        int index = Random.Range(0, virusSpawnClips.Count);
-        AudioClip chosen = virusSpawnClips[index];
-        if (chosen != null)
-            virusSfxSource.PlayOneShot(chosen);
+        var clip = virusSpawnClips[Random.Range(0, virusSpawnClips.Count)];
+        if (clip != null)
+            virusSfxSource.PlayOneShot(clip);
+    }
+
+    public void PlayAdCloseSfx()
+    {
+        if (virusSfxSource == null) return;
+        if (adCloseClips == null || adCloseClips.Count == 0) return;
+
+        var clip = adCloseClips[Random.Range(0, adCloseClips.Count)];
+        if (clip != null)
+            virusSfxSource.PlayOneShot(clip);
     }
 
     void UpdateFanVolume(float heat01)
@@ -475,7 +454,7 @@ public class GameManager : MonoBehaviour
         fanSource.volume = Mathf.Lerp(fanMinVolume, fanMaxVolume, heat01);
     }
 
-    // ================== POWERUP API ==================
+    // ================== POWERUPS ==================
 
     public void ApplyFreezePowerup(float duration)
     {
@@ -493,12 +472,10 @@ public class GameManager : MonoBehaviour
     public void ApplyClearAllPowerup()
     {
         foreach (var ad in activeAds)
-        {
             if (ad != null)
                 Destroy(ad.gameObject);
-        }
-        activeAds.Clear();
 
+        activeAds.Clear();
         spawnDifficultyTime = 0f;
         spawnTimer = 0f;
 

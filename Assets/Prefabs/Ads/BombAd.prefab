@@ -366,6 +366,25 @@ MonoBehaviour:
   adType: 1
   autoDespawn: 1
   autoDespawnTime: 6
+  isMovingAd: 0
+  moveSpeed: 45
+  driftDistance: 25
+  directionChangeInterval: 1.2
+  breathing: 0
+  breathingSpeed: 2
+  breathingStrength: 0.05
+  rotating: 0
+  rotationSpeed: 25
+  runFromCursor: 0
+  runSpeed: 200
+  cursorRunDistance: 110
+  spawnScale: 0.2
+  openDuration: 0.18
+  closeDuration: 0.16
+  bombFlash: 1
+  bombFlashTarget: {fileID: 1441415852954862935}
+  bombFlashColor: {r: 1, g: 0, b: 0, a: 1}
+  bombFlashSpeed: 6
 --- !u!1 &7849905788171260969
 GameObject:
   m_ObjectHideFlags: 0

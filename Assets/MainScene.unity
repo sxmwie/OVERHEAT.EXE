@@ -655,6 +655,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 9175613af34a77f4a93acea4a5645a9d, type: 3}
   - {fileID: 8300000, guid: eb3d43419df06b54f8452ecf4c11b52e, type: 3}
   - {fileID: 8300000, guid: 153df71e36df8864c95bcfa2a8778df2, type: 3}
+  adCloseClips:
+  - {fileID: 8300000, guid: f9e9df1869a2cea4cb0c88c5b56dac10, type: 3}
   fanSource: {fileID: 163846607}
   fanMinVolume: 0
   fanMaxVolume: 0.8
