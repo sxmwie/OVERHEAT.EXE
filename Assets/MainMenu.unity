@@ -619,6 +619,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ForceAspect
   targetAspect: 1.3333334
+  cam: {fileID: 0}
 --- !u!1 &150601037
 GameObject:
   m_ObjectHideFlags: 0
@@ -1440,14 +1441,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -9094291423972472487, guid: 59aa898bc6c2add4eab09d6caff3a575, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3208,6 +3209,7 @@ GameObject:
   - component: {fileID: 1928597826}
   - component: {fileID: 1928597828}
   - component: {fileID: 1928597827}
+  - component: {fileID: 1928597829}
   m_Layer: 5
   m_Name: TITLE
   m_TagString: Untagged
@@ -3333,6 +3335,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1928597825}
   m_CullTransparentMesh: 1
+--- !u!114 &1928597829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1928597825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67b752d1e8c92d747b559d468275d7c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIBreather
+  scaleAmplitude: 0.05
+  scaleSpeed: 1.2
+  useUnscaledTime: 1
 --- !u!1 &2004989621
 GameObject:
   m_ObjectHideFlags: 0
@@ -3351,7 +3368,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2004989622
 MonoBehaviour:
   m_ObjectHideFlags: 0
