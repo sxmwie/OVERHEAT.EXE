@@ -150,6 +150,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 258837839}
+  - {fileID: 1653601624}
   m_Father: {fileID: 86507703}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -651,6 +652,16 @@ MonoBehaviour:
   shakeMaxAmplitude: 12
   overlayMaxAlpha: 0.45
   adCloseFxPrefab: {fileID: 6244467085993409861, guid: 541c1c4add6835a4cac621cb0c6f2e87, type: 3}
+  floatingTextPrefab: {fileID: 5816166115748496584, guid: 275be86d9ca4e1544a4010967f005b78, type: 3}
+  powerupTextAnchor: {fileID: 1653601624}
+  adCoolingText: +2 cooling
+  powerupCoolingText: +10 cooling
+  powerupFreezeText: temperature freeze
+  powerupClearText: clean all
+  adCoolingTextColor: {r: 0, g: 1, b: 1, a: 1}
+  powerupCoolingColor: {r: 0, g: 1, b: 1, a: 1}
+  powerupFreezeColor: {r: 0, g: 0, b: 1, a: 1}
+  powerupClearColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   virusSfxSource: {fileID: 163846606}
   virusSpawnClips:
   - {fileID: 8300000, guid: 9175613af34a77f4a93acea4a5645a9d, type: 3}
@@ -2497,6 +2508,41 @@ RectTransform:
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -40, y: -40}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1653601623
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1653601624}
+  m_Layer: 5
+  m_Name: PowerupTextAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1653601624
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1653601623}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7544468}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1673440847
 GameObject:

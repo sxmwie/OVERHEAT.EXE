@@ -79,12 +79,26 @@ public class GameManager : MonoBehaviour
 
     // ---------- VISUAL FX ----------
     [Header("Visual FX")]
-    public GameObject adCloseFxPrefab;   // UI burst prefab
+    public GameObject adCloseFxPrefab;        // square burst prefab
+    public GameObject floatingTextPrefab;     // FloatingTextUI prefab
+    public RectTransform powerupTextAnchor;   // where powerup text appears (bottom bar)
+
+    [Header("Floating Text Strings")]
+    public string adCoolingText       = "+2 cooling";
+    public string powerupCoolingText  = "+10 cooling";
+    public string powerupFreezeText   = "temperature freeze";
+    public string powerupClearText    = "clean all";
+
+    [Header("Floating Text Colors")]
+    public Color adCoolingTextColor      = Color.cyan;
+    public Color powerupCoolingColor     = Color.cyan;
+    public Color powerupFreezeColor      = Color.blue;
+    public Color powerupClearColor       = Color.yellow;
 
     // ---------- AUDIO ----------
     [Header("Audio")]
     [Tooltip("AudioSource with NO clip, PlayOnAwake OFF, Loop OFF")]
-    public AudioSource virusSfxSource;               // shared one-shot source
+    public AudioSource virusSfxSource;
 
     [Tooltip("Clips used when a popup SPAWNS")]
     public List<AudioClip> virusSpawnClips;
@@ -325,7 +339,8 @@ public class GameManager : MonoBehaviour
         popupRt.anchoredPosition = pos;
     }
 
-    // ---------- visual FX spawn ----------
+    // ---------- visual FX ----------
+
     public void SpawnAdCloseFx(RectTransform source)
     {
         if (adCloseFxPrefab == null || popupArea == null || source == null) return;
@@ -334,6 +349,42 @@ public class GameManager : MonoBehaviour
         RectTransform fxRt = fx.GetComponent<RectTransform>();
         if (fxRt != null)
             fxRt.anchoredPosition = source.anchoredPosition;
+    }
+
+    public void SpawnFloatingText(string message, RectTransform source, Color color)
+    {
+        if (floatingTextPrefab == null || popupArea == null || source == null) return;
+
+        GameObject go = Instantiate(floatingTextPrefab, popupArea);
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchoredPosition = source.anchoredPosition;
+
+        FloatingTextUI ft = go.GetComponent<FloatingTextUI>();
+        if (ft != null)
+            ft.Setup(message, color);
+    }
+
+    public void ShowAdCoolingText(RectTransform source)
+    {
+        SpawnFloatingText(adCoolingText, source, adCoolingTextColor);
+    }
+
+    public void ShowPowerupCoolingText()
+    {
+        if (powerupTextAnchor != null)
+            SpawnFloatingText(powerupCoolingText, powerupTextAnchor, powerupCoolingColor);
+    }
+
+    public void ShowPowerupFreezeText()
+    {
+        if (powerupTextAnchor != null)
+            SpawnFloatingText(powerupFreezeText, powerupTextAnchor, powerupFreezeColor);
+    }
+
+    public void ShowPowerupClearText()
+    {
+        if (powerupTextAnchor != null)
+            SpawnFloatingText(powerupClearText, powerupTextAnchor, powerupClearColor);
     }
 
     // ================== POPUP CALLBACKS ==================
@@ -475,6 +526,7 @@ public class GameManager : MonoBehaviour
     {
         tempFrozen = true;
         freezeTimer = Mathf.Max(freezeTimer, duration);
+        ShowPowerupFreezeText();
     }
 
     public void ApplyCoolPowerup(float amount)
@@ -482,6 +534,7 @@ public class GameManager : MonoBehaviour
         temp -= amount;
         temp = Mathf.Clamp(temp, 0f, tempMax);
         UpdateTempUI();
+        ShowPowerupCoolingText();
     }
 
     public void ApplyClearAllPowerup()
@@ -501,6 +554,7 @@ public class GameManager : MonoBehaviour
         }
 
         UpdateTempUI();
+        ShowPowerupClearText();
     }
 
     // ================== GAME OVER ==================

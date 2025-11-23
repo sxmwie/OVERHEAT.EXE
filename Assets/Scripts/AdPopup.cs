@@ -20,7 +20,6 @@ public class AdPopup : MonoBehaviour
     public bool autoDespawn = false;
     public float autoDespawnTime = 6f;
 
-    // ───── Extra Behaviours ─────
     [Header("Movement")]
     public bool isMovingAd = false;
     public float moveSpeed = 45f;
@@ -41,13 +40,11 @@ public class AdPopup : MonoBehaviour
     public float runSpeed = 200f;
     public float cursorRunDistance = 110f;
 
-    // ───── OPEN / CLOSE ANIMATION ─────
     [Header("Open / Close Animation")]
     public float spawnScale = 0.2f;
     public float openDuration = 0.18f;
     public float closeDuration = 0.16f;
 
-    // ───── BOMB FLASHING ─────
     [Header("Bomb Flashing")]
     public bool bombFlash = true;
     public Image bombFlashTarget;
@@ -106,6 +103,7 @@ public class AdPopup : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
+        // auto despawn
         if (autoDespawn && !isClosing)
         {
             lifeTimer += dt;
@@ -120,6 +118,7 @@ public class AdPopup : MonoBehaviour
             }
         }
 
+        // moving
         if (isMovingAd && !isClosing)
         {
             driftTimer += dt;
@@ -139,6 +138,7 @@ public class AdPopup : MonoBehaviour
                 GameManager.Instance.SnapPopupInside(rt);
         }
 
+        // run from cursor
         if (runFromCursor && !isClosing && GameManager.Instance != null)
         {
             Vector2 mouseLocal;
@@ -160,6 +160,7 @@ public class AdPopup : MonoBehaviour
 
         float scaleFactor = 1f;
 
+        // open grow
         if (isOpening)
         {
             openTimer += dt;
@@ -172,6 +173,7 @@ public class AdPopup : MonoBehaviour
                 isOpening = false;
         }
 
+        // close shrink
         if (isClosing)
         {
             closeTimer += dt;
@@ -189,6 +191,7 @@ public class AdPopup : MonoBehaviour
             }
         }
 
+        // breathing
         if (breathing && !isClosing)
         {
             float breathe = 1f + Mathf.Sin(Time.time * breathingSpeed) * breathingStrength;
@@ -197,11 +200,13 @@ public class AdPopup : MonoBehaviour
 
         rt.localScale = baseScale * scaleFactor;
 
+        // rotation
         if (rotating && !isClosing)
         {
             rt.Rotate(0f, 0f, rotationSpeed * dt);
         }
 
+        // bomb flash
         if (bombFlash && adType == AdType.Bomb && bombFlashTarget != null && !isClosing)
         {
             if (!bombColorCached)
@@ -230,7 +235,6 @@ public class AdPopup : MonoBehaviour
         if (GameManager.Instance == null || isClosing)
             return;
 
-        // sound
         GameManager.Instance.PlayAdCloseSfx();
 
         Action cb = null;
@@ -239,10 +243,14 @@ public class AdPopup : MonoBehaviour
         {
             case AdType.Normal:
                 cb = () => GameManager.Instance.OnPopupClosed(this);
+                // show "+2 cooling" at ad position
+                GameManager.Instance.ShowAdCoolingText(rt);
                 break;
+
             case AdType.Bomb:
                 cb = () => GameManager.Instance.OnBombAdClicked(this);
                 break;
+
             case AdType.Cascade:
                 cb = () => GameManager.Instance.OnCascadeAdClosed(this);
                 break;
@@ -255,7 +263,7 @@ public class AdPopup : MonoBehaviour
     {
         if (isClosing) return;
 
-        // spawn particle FX at this ad's position
+        // spawn close particle FX at this ad's position
         if (GameManager.Instance != null && rt != null)
             GameManager.Instance.SpawnAdCloseFx(rt);
 
