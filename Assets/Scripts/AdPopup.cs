@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,7 +19,7 @@ public class AdPopup : MonoBehaviour
     public bool autoDespawn = false;
     public float autoDespawnTime = 6f;
 
-    // ───── Additional Behaviours ─────
+    // ───── Extra Behaviours (you already had) ─────
     [Header("Movement")]
     public bool isMovingAd = false;
     public float moveSpeed = 45f;
@@ -39,17 +40,33 @@ public class AdPopup : MonoBehaviour
     public float runSpeed = 200f;
     public float cursorRunDistance = 110f;
 
-    // ───── internals ─────
+    // ───── NEW: open / close animations ─────
+    [Header("Open / Close Animation")]
+    public float spawnScale = 0.2f;      // start at 20% size, grow to 100%
+    public float openDuration = 0.18f;   // seconds
+    public float closeDuration = 0.16f;  // seconds
+
     RectTransform rt;
     float lifeTimer = 0f;
+
     Vector2 driftTarget;
     float driftTimer = 0f;
+
     Vector3 baseScale;
+
+    bool isOpening = false;
+    float openTimer = 0f;
+
+    bool isClosing = false;
+    float closeTimer = 0f;
+    Action onCloseFinished;
 
     void Awake()
     {
         rt = GetComponent<RectTransform>();
         baseScale = rt.localScale;
+        if (baseScale == Vector3.zero)
+            baseScale = Vector3.one;
     }
 
     void Start()
@@ -60,6 +77,11 @@ public class AdPopup : MonoBehaviour
         if (GameManager.Instance != null && rt != null)
             GameManager.Instance.SnapPopupInside(rt);
 
+        // start tiny, then grow
+        rt.localScale = baseScale * spawnScale;
+        isOpening = true;
+        openTimer = 0f;
+
         if (isMovingAd)
             PickNewDriftPoint();
     }
@@ -68,19 +90,23 @@ public class AdPopup : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
-        // auto despawn
-        if (autoDespawn)
+        // ───── Auto despawn ─────
+        if (autoDespawn && !isClosing)
         {
             lifeTimer += dt;
             if (lifeTimer >= autoDespawnTime)
             {
-                AutoDespawn();
+                StartClosing(() =>
+                {
+                    if (GameManager.Instance != null)
+                        GameManager.Instance.OnAdAutoDespawn(this);
+                });
                 return;
             }
         }
 
-        // drifting movement
-        if (isMovingAd)
+        // ───── Movement / drift ─────
+        if (isMovingAd && !isClosing)
         {
             driftTimer += dt;
             if (driftTimer >= directionChangeInterval)
@@ -89,83 +115,140 @@ public class AdPopup : MonoBehaviour
                 PickNewDriftPoint();
             }
 
-            rt.anchoredPosition = Vector2.MoveTowards(rt.anchoredPosition, driftTarget, moveSpeed * dt);
+            rt.anchoredPosition = Vector2.MoveTowards(
+                rt.anchoredPosition,
+                driftTarget,
+                moveSpeed * dt
+            );
 
             if (GameManager.Instance != null)
                 GameManager.Instance.SnapPopupInside(rt);
         }
 
-        // breathing
-        if (breathing)
+        // ───── Run away from cursor ─────
+        if (runFromCursor && !isClosing && GameManager.Instance != null)
         {
-            float scale = 1f + Mathf.Sin(Time.time * breathingSpeed) * breathingStrength;
-            rt.localScale = baseScale * scale;
-        }
-
-        // rotation
-        if (rotating)
-        {
-            rt.Rotate(0f, 0f, rotationSpeed * dt);
-        }
-
-        // run from cursor
-        if (runFromCursor)
-        {
-            Vector2 mousePos;
+            Vector2 mouseLocal;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 GameManager.Instance.popupArea,
                 Input.mousePosition,
                 null,
-                out mousePos
+                out mouseLocal
             );
 
-            float dist = Vector2.Distance(mousePos, rt.anchoredPosition);
+            float dist = Vector2.Distance(mouseLocal, rt.anchoredPosition);
             if (dist < cursorRunDistance)
             {
-                Vector2 away = (rt.anchoredPosition - mousePos).normalized;
+                Vector2 away = (rt.anchoredPosition - mouseLocal).normalized;
                 rt.anchoredPosition += away * runSpeed * dt;
-                if (GameManager.Instance != null)
-                    GameManager.Instance.SnapPopupInside(rt);
+                GameManager.Instance.SnapPopupInside(rt);
             }
+        }
+
+        // ───── Breathing + rotation + open/close scale ─────
+        float scaleFactor = 1f;
+
+        // opening (spawn grow)
+        if (isOpening)
+        {
+            openTimer += dt;
+            float t = Mathf.Clamp01(openTimer / openDuration);
+            float eased = Mathf.SmoothStep(0f, 1f, t);
+            float openScale = Mathf.Lerp(spawnScale, 1f, eased);
+            scaleFactor *= openScale;
+
+            if (t >= 1f)
+            {
+                isOpening = false;
+            }
+        }
+
+        // closing (shrink away)
+        if (isClosing)
+        {
+            closeTimer += dt;
+            float t = Mathf.Clamp01(closeTimer / closeDuration);
+            float eased = Mathf.SmoothStep(0f, 1f, t);
+            float closeScale = Mathf.Lerp(1f, 0f, eased);
+            scaleFactor *= closeScale;
+
+            if (t >= 1f)
+            {
+                // end of close animation
+                if (onCloseFinished != null)
+                    onCloseFinished();
+                Destroy(gameObject);
+                return;
+            }
+        }
+
+        // breathing multiplier
+        if (breathing && !isClosing)
+        {
+            float breathe = 1f + Mathf.Sin(Time.time * breathingSpeed) * breathingStrength;
+            scaleFactor *= breathe;
+        }
+
+        // apply final scale
+        rt.localScale = baseScale * scaleFactor;
+
+        // rotation
+        if (rotating && !isClosing)
+        {
+            rt.Rotate(0f, 0f, rotationSpeed * dt);
         }
     }
 
     void PickNewDriftPoint()
     {
-        Vector2 randomOffset = Random.insideUnitCircle * driftDistance;
+        Vector2 randomOffset = UnityEngine.Random.insideUnitCircle * driftDistance;
         driftTarget = rt.anchoredPosition + randomOffset;
     }
 
     void OnCloseClicked()
     {
-        if (GameManager.Instance == null)
-        {
-            Destroy(gameObject);
+        if (GameManager.Instance == null || isClosing)
             return;
-        }
+
+        Action cb = null;
 
         switch (adType)
         {
             case AdType.Normal:
-                GameManager.Instance.OnPopupClosed(this);
+                cb = () =>
+                {
+                    GameManager.Instance.OnPopupClosed(this);
+                };
                 break;
 
             case AdType.Bomb:
-                GameManager.Instance.OnBombAdClicked(this);
+                cb = () =>
+                {
+                    GameManager.Instance.OnBombAdClicked(this);
+                };
                 break;
 
             case AdType.Cascade:
-                GameManager.Instance.OnCascadeAdClosed(this);
+                cb = () =>
+                {
+                    GameManager.Instance.OnCascadeAdClosed(this);
+                };
                 break;
         }
 
-        Destroy(gameObject);
+        StartClosing(cb);
     }
 
-    void AutoDespawn()
+    void StartClosing(Action callback)
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.OnAdAutoDespawn(this);
-        Destroy(gameObject);
+        if (isClosing) return;
+
+        isClosing = true;
+        isOpening = false;
+        closeTimer = 0f;
+        onCloseFinished = callback;
+
+        if (closeButton != null)
+            closeButton.interactable = false;
     }
 }
