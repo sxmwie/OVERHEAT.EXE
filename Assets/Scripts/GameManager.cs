@@ -58,14 +58,25 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public TMP_Text gameOverText;
 
-    // ---------- POWERUPS ----------
-    [Header("Powerup Settings")]
+    // ---------- POWERUP SETTINGS ----------
+    [Header("Powerup Effects")]
     public float freezeDurationSeconds = 6f;
     public float coolAmount = 18f;
     public float clearAllTempBonus = 25f;   // how much clear-all cools (°C)
 
     bool tempFrozen = false;
     float freezeTimer = 0f;
+
+    // ---------- POWERUP INVENTORY ----------
+    [Header("Powerup Inventory")]
+    public int invCool = 0;
+    public int invFreeze = 0;
+    public int invClear = 0;
+
+    // these should point to the SMALL count texts next to your icons
+    public TMP_Text invCoolText;    
+    public TMP_Text invFreezeText;  
+    public TMP_Text invClearText;   
 
     // ---------- HEAT VFX ----------
     [Header("Heat Visuals")]
@@ -158,6 +169,7 @@ public class GameManager : MonoBehaviour
 
         RebuildAdTypeLists();
         UpdateTempUI();
+        UpdatePowerupUI();
     }
 
     void RebuildAdTypeLists()
@@ -200,6 +212,7 @@ public class GameManager : MonoBehaviour
 
         HandleSpawning(dt);
         HandleTemperature(dt);
+        HandlePowerupKeys();
     }
 
     // ================== SPAWNING ==================
@@ -263,6 +276,9 @@ public class GameManager : MonoBehaviour
         GameObject go = Instantiate(prefab, popupArea);
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.localScale = Vector3.one;
+
+        // safenet: make sure popup fits inside area
+        EnsurePopupFits(rt);
 
         Vector2 pos = RandomInsidePopupArea(rt);
         rt.anchoredPosition = pos;
@@ -342,30 +358,22 @@ public class GameManager : MonoBehaviour
     {
         if (popupArea == null || popupRt == null) return;
 
-        // parent (the XP screen) size
         Rect parentRect = popupArea.rect;
         float maxWidth  = parentRect.width  - 2f * spawnPadding;
         float maxHeight = parentRect.height - 2f * spawnPadding;
 
-        // current popup size (local rect)
         float w = popupRt.rect.width;
         float h = popupRt.rect.height;
 
-        // already small enough? do nothing
         if (w <= maxWidth && h <= maxHeight)
             return;
 
-        // how much do we need to shrink by in each axis?
         float scaleX = maxWidth  / w;
         float scaleY = maxHeight / h;
 
-        // pick the smallest scale so it fits in both directions
         float scale = Mathf.Min(scaleX, scaleY, 1f);
-
-        // apply the scale
         popupRt.localScale *= scale;
     }
-
 
     // ---------- visual FX ----------
 
@@ -562,13 +570,89 @@ public class GameManager : MonoBehaviour
         fanSource.volume = Mathf.Lerp(fanMinVolume, fanMaxVolume, heat01);
     }
 
-    // ================== POWERUPS ==================
+    // ================== POWERUP INVENTORY ==================
+
+    public void AddPowerupCool(int amount = 1)
+    {
+        invCool += amount;
+        UpdatePowerupUI();
+    }
+
+    public void AddPowerupFreeze(int amount = 1)
+    {
+        invFreeze += amount;
+        UpdatePowerupUI();
+    }
+
+    public void AddPowerupClear(int amount = 1)
+    {
+        invClear += amount;
+        UpdatePowerupUI();
+    }
+
+    void UpdatePowerupUI()
+    {
+        // just show the counts next to icons
+        if (invCoolText != null)
+            invCoolText.text = invCool.ToString();
+
+        if (invFreezeText != null)
+            invFreezeText.text = invFreeze.ToString();
+
+        if (invClearText != null)
+            invClearText.text = invClear.ToString();
+    }
+
+    void HandlePowerupKeys()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+            TryUseCool();
+
+        if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+            TryUseFreeze();
+
+        if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+            TryUseClear();
+    }
+
+    void TryUseCool()
+    {
+        if (isGameOver) return;
+        if (invCool <= 0) return;
+
+        invCool--;
+        ApplyCoolPowerup(coolAmount);
+        UpdatePowerupUI();
+    }
+
+    void TryUseFreeze()
+    {
+        if (isGameOver) return;
+        if (invFreeze <= 0) return;
+
+        invFreeze--;
+        ApplyFreezePowerup(freezeDurationSeconds);
+        UpdatePowerupUI();
+    }
+
+    void TryUseClear()
+    {
+        if (isGameOver) return;
+        if (invClear <= 0) return;
+
+        invClear--;
+        ApplyClearAllPowerup();
+        UpdatePowerupUI();
+    }
+
+    // ================== POWERUP EFFECTS (when actually USED) ==================
 
     public void ApplyFreezePowerup(float duration)
     {
         tempFrozen = true;
         freezeTimer = Mathf.Max(freezeTimer, duration);
         ShowPowerupFreezeText();
+        UpdateTempUI();
     }
 
     public void ApplyCoolPowerup(float amount)

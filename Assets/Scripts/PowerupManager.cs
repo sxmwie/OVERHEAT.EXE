@@ -1,4 +1,5 @@
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class PowerupManager : MonoBehaviour
 {
@@ -7,7 +8,7 @@ public class PowerupManager : MonoBehaviour
     [Header("UI")]
     public RectTransform powerupBar;
     public RectTransform hitZone;
-    public Transform moverParent; // PowerupMover object
+    public Transform moverParent; // parent for moving icon
 
     [Header("Prefabs")]
     public GameObject powerFreeze;
@@ -105,18 +106,18 @@ public class PowerupManager : MonoBehaviour
     {
         if (GameManager.Instance == null) return;
 
+        // instead of using immediately, add to inventory
         if (name.Contains("Freeze"))
         {
-            GameManager.Instance.ApplyFreezePowerup(6f);
+            GameManager.Instance.AddPowerupFreeze(1);
         }
         else if (name.Contains("Cool"))
         {
-            GameManager.Instance.ApplyCoolPowerup(18f);
+            GameManager.Instance.AddPowerupCool(1);
         }
         else if (name.Contains("Clear"))
         {
-            // clear-all: wipe screen + cool, but *no* spawn-speed reset
-            GameManager.Instance.ApplyClearAllPowerup();
+            GameManager.Instance.AddPowerupClear(1);
         }
     }
 }
