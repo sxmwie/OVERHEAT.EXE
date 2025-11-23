@@ -147,9 +147,11 @@ public class GameManager : MonoBehaviour
 
     public AudioClip explosionClip;
 
+        // ===== Fade to Black =====
     [Header("Fade to Black")]
-    public CanvasGroup fadeToBlackOverlay;     // ← drag FadeToBlackOverlay here
-    public float fadeToBlackDuration = 1.4f;   // how long fading to black takes
+    public CanvasGroup fadeToBlackOverlay;
+    public float fadeToBlackDuration = 1.4f;
+
 
 
 
@@ -165,8 +167,10 @@ public class GameManager : MonoBehaviour
     bool isGameOver = false;
     public bool IsGameOver => isGameOver;   // ← ADD THIS
 
+// ===== Game Over Fade =====
     [Header("Game Over Fade")]
     public float gameOverTextFadeDuration = 1.2f;
+
 
 
 
