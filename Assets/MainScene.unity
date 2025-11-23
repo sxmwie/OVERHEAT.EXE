@@ -497,6 +497,7 @@ GameObject:
   - component: {fileID: 156005309}
   - component: {fileID: 156005308}
   - component: {fileID: 156005307}
+  - component: {fileID: 156005310}
   m_Layer: 5
   m_Name: RestartButton
   m_TagString: Untagged
@@ -618,6 +619,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 156005305}
   m_CullTransparentMesh: 1
+--- !u!114 &156005310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 156005305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afe951da0eb37a44e9080a1b30bfcc5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSfx
+  playClick: 1
+  playHover: 1
 --- !u!1 &163846603
 GameObject:
   m_ObjectHideFlags: 0
@@ -1848,6 +1863,7 @@ GameObject:
   - component: {fileID: 488421447}
   - component: {fileID: 488421446}
   - component: {fileID: 488421445}
+  - component: {fileID: 488421448}
   m_Layer: 5
   m_Name: MenuButton
   m_TagString: Untagged
@@ -1969,6 +1985,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 488421443}
   m_CullTransparentMesh: 1
+--- !u!114 &488421448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 488421443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afe951da0eb37a44e9080a1b30bfcc5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSfx
+  playClick: 1
+  playHover: 1
 --- !u!1 &494620850
 GameObject:
   m_ObjectHideFlags: 0
@@ -2110,6 +2140,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2235,6 +2266,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4011a6c22b5cef9439720a6f18245048, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ForceAspect
+  targetAspect: 1.3333334
 --- !u!1 &556594072
 GameObject:
   m_ObjectHideFlags: 0
