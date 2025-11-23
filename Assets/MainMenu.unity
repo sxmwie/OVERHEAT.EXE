@@ -203,8 +203,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 60
+  m_fontSizeBase: 60
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -416,8 +416,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 60
+  m_fontSizeBase: 60
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -862,6 +862,7 @@ GameObject:
   - component: {fileID: 340738685}
   - component: {fileID: 340738684}
   - component: {fileID: 340738683}
+  - component: {fileID: 340738686}
   m_Layer: 5
   m_Name: StartButton
   m_TagString: Untagged
@@ -886,8 +887,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 110.9}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 0, y: 65}
+  m_SizeDelta: {x: 500, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &340738683
 MonoBehaviour:
@@ -983,6 +984,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 340738681}
   m_CullTransparentMesh: 1
+--- !u!114 &340738686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 340738681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a27a53286dc9664f89e2ac260c1aba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonBreather
+  breathAmplitude: 0.03
+  breathSpeed: 1.5
+  hoverScaleMultiplier: 1.1
+  hoverExtraAmplitude: 0.02
 --- !u!1 &368614101
 GameObject:
   m_ObjectHideFlags: 0
@@ -1067,8 +1084,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 60
+  m_fontSizeBase: 60
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1131,6 +1148,7 @@ GameObject:
   - component: {fileID: 467110259}
   - component: {fileID: 467110258}
   - component: {fileID: 467110257}
+  - component: {fileID: 467110260}
   m_Layer: 5
   m_Name: QuitButton
   m_TagString: Untagged
@@ -1155,8 +1173,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -88.88}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 0, y: -265}
+  m_SizeDelta: {x: 500, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &467110257
 MonoBehaviour:
@@ -1252,6 +1270,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 467110255}
   m_CullTransparentMesh: 1
+--- !u!114 &467110260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 467110255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a27a53286dc9664f89e2ac260c1aba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonBreather
+  breathAmplitude: 0.03
+  breathSpeed: 1.5
+  hoverScaleMultiplier: 1.1
+  hoverExtraAmplitude: 0.02
 --- !u!1 &627667960
 GameObject:
   m_ObjectHideFlags: 0
@@ -1264,6 +1298,7 @@ GameObject:
   - component: {fileID: 627667964}
   - component: {fileID: 627667963}
   - component: {fileID: 627667962}
+  - component: {fileID: 627667965}
   m_Layer: 5
   m_Name: InstructionsButton
   m_TagString: Untagged
@@ -1288,8 +1323,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 51.26}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 0, y: -44}
+  m_SizeDelta: {x: 500, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &627667962
 MonoBehaviour:
@@ -1385,6 +1420,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 627667960}
   m_CullTransparentMesh: 1
+--- !u!114 &627667965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 627667960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a27a53286dc9664f89e2ac260c1aba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonBreather
+  breathAmplitude: 0.03
+  breathSpeed: 1.5
+  hoverScaleMultiplier: 1.1
+  hoverExtraAmplitude: 0.02
 --- !u!1 &674216114
 GameObject:
   m_ObjectHideFlags: 0
@@ -1607,8 +1658,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 60
+  m_fontSizeBase: 60
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1721,7 +1772,7 @@ MonoBehaviour:
 '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: -5328819892663423296, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1915,9 +1966,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
   gameSceneName: MainScene
-  menuPanel: {fileID: 197410135}
-  instructionsPanel: {fileID: 150601037}
-  creditsPanel: {fileID: 31343041}
+  menuPanel: {fileID: 197410136}
+  instructionsPanel: {fileID: 150601038}
+  creditsPanel: {fileID: 31343042}
+  slideDuration: 0.4
+  horizontalOffset: 260
+  offscreenRightX: 700
 --- !u!1 &1403852990
 GameObject:
   m_ObjectHideFlags: 0
@@ -1930,6 +1984,7 @@ GameObject:
   - component: {fileID: 1403852994}
   - component: {fileID: 1403852993}
   - component: {fileID: 1403852992}
+  - component: {fileID: 1403852995}
   m_Layer: 5
   m_Name: CreditsButton
   m_TagString: Untagged
@@ -1954,8 +2009,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -21.1}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 0, y: -155}
+  m_SizeDelta: {x: 500, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1403852992
 MonoBehaviour:
@@ -2051,6 +2106,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1403852990}
   m_CullTransparentMesh: 1
+--- !u!114 &1403852995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1403852990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a27a53286dc9664f89e2ac260c1aba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonBreather
+  breathAmplitude: 0.03
+  breathSpeed: 1.5
+  hoverScaleMultiplier: 1.1
+  hoverExtraAmplitude: 0.02
 --- !u!1 &1570519851
 GameObject:
   m_ObjectHideFlags: 0
@@ -2244,7 +2315,7 @@ MonoBehaviour:
   m_text: INSTRUCTIONS YADAYADA
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: -5328819892663423296, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2490,8 +2561,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 258.21}
-  m_SizeDelta: {x: 450, y: 50}
+  m_AnchoredPosition: {x: 0, y: 291.2}
+  m_SizeDelta: {x: 2000, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1928597827
 MonoBehaviour:
@@ -2513,7 +2584,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GAME NAME
+  m_text: ANNOYING VIRUS POPUP GAME
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
   m_sharedMaterial: {fileID: -5328819892663423296, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
@@ -2540,8 +2611,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50
-  m_fontSizeBase: 50
+  m_fontSize: 80
+  m_fontSizeBase: 80
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
