@@ -620,6 +620,13 @@ MonoBehaviour:
   - {fileID: 5845162529172167576, guid: d1ae358dab6c91445852c7f85ab51742, type: 3}
   - {fileID: 7414041518194056874, guid: a46739e5dd5afc646b34fdfa9d0175b2, type: 3}
   - {fileID: 5508281997540098215, guid: b6eb4e2800d6d1243b5a8364a9a36643, type: 3}
+  normalWeight: 1
+  bombWeight: 0.08
+  cascadeWeight: 0.13
+  movingChance: 0.203
+  breathingChance: 0.342
+  rotatingChance: 0.118
+  runAwayChance: 0.198
   timerText: {fileID: 779151637}
   bestText: {fileID: 1181408069}
   temp: 30

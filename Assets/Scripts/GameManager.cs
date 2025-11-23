@@ -17,6 +17,17 @@ public class GameManager : MonoBehaviour
     [Header("Ad Prefabs")]
     public List<GameObject> adPrefabs = new List<GameObject>();
 
+    [Header("Ad Rarity (Type Weights)")]
+    [Range(0f, 5f)] public float normalWeight  = 1f;
+    [Range(0f, 5f)] public float bombWeight    = 0.25f;
+    [Range(0f, 5f)] public float cascadeWeight = 0.2f;
+
+    [Header("Ad Behaviours (for NORMAL ads)")]
+    [Range(0f, 1f)] public float movingChance    = 0.18f;
+    [Range(0f, 1f)] public float breathingChance = 0.30f;
+    [Range(0f, 1f)] public float rotatingChance  = 0.18f;
+    [Range(0f, 1f)] public float runAwayChance   = 0.10f;
+
     // ---------- TIMER UI ----------
     [Header("Timer UI")]
     public TMP_Text timerText;
@@ -40,19 +51,6 @@ public class GameManager : MonoBehaviour
     public float minSpawnInterval = 0.6f;
     public float difficultyRampPerSecond = 0.004f;
     public float spawnPadding = 10f;
-
-    // ---------- MOVING ----------
-
-    [Header("Moving Ads")]
-    [Range(0f, 1f)] public float movingAdChance = 0.15f; // 15% of normal ads move
-
-    [Header("Ad Behaviours")]
-    [Range(0f, 1f)] public float movingChance = 0.18f;
-    [Range(0f, 1f)] public float breathingChance = 0.25f;
-    [Range(0f, 1f)] public float rotatingChance = 0.18f;
-    [Range(0f, 1f)] public float runAwayChance = 0.10f;
-
-
 
     // ---------- GAME OVER ----------
     [Header("Game Over")]
@@ -92,6 +90,10 @@ public class GameManager : MonoBehaviour
 
     // ---------- INTERNAL STATE ----------
     List<AdPopup> activeAds = new List<AdPopup>();
+    List<GameObject> normalPrefabs = new List<GameObject>();
+    List<GameObject> bombPrefabs   = new List<GameObject>();
+    List<GameObject> cascadePrefabs= new List<GameObject>();
+
     float elapsedTime = 0f;
     float spawnDifficultyTime = 0f;
     float spawnTimer = 0f;
@@ -134,7 +136,37 @@ public class GameManager : MonoBehaviour
             fanSource.volume = fanMinVolume;
         }
 
+        // categorize ad prefabs by type once at startup
+        RebuildAdTypeLists();
+
         UpdateTempUI();
+    }
+
+    void RebuildAdTypeLists()
+    {
+        normalPrefabs.Clear();
+        bombPrefabs.Clear();
+        cascadePrefabs.Clear();
+
+        foreach (var prefab in adPrefabs)
+        {
+            if (prefab == null) continue;
+            AdPopup ap = prefab.GetComponent<AdPopup>();
+            if (ap == null) continue;
+
+            switch (ap.adType)
+            {
+                case AdPopup.AdType.Normal:
+                    normalPrefabs.Add(prefab);
+                    break;
+                case AdPopup.AdType.Bomb:
+                    bombPrefabs.Add(prefab);
+                    break;
+                case AdPopup.AdType.Cascade:
+                    cascadePrefabs.Add(prefab);
+                    break;
+            }
+        }
     }
 
     void Update()
@@ -167,18 +199,57 @@ public class GameManager : MonoBehaviour
         if (spawnTimer >= currentInterval)
         {
             spawnTimer = 0f;
-            SpawnPopup();     // generic spawn (can be normal / bomb / cascade)
+            SpawnPopup();
         }
     }
 
     void SpawnPopup()
     {
-        if (adPrefabs.Count == 0) return;
-
-        int index = Random.Range(0, adPrefabs.Count);
-        GameObject prefab = adPrefabs[index];
+        GameObject prefab = PickAdPrefabByRarity();
+        if (prefab == null)
+        {
+            // fallback: just random from all
+            if (adPrefabs.Count == 0) return;
+            prefab = adPrefabs[Random.Range(0, adPrefabs.Count)];
+        }
 
         SpawnPopupFromPrefab(prefab);
+    }
+
+    GameObject PickAdPrefabByRarity()
+    {
+        // compute total weight based on which lists actually exist
+        float nW = (normalPrefabs.Count  > 0) ? Mathf.Max(0f, normalWeight)  : 0f;
+        float bW = (bombPrefabs.Count    > 0) ? Mathf.Max(0f, bombWeight)    : 0f;
+        float cW = (cascadePrefabs.Count > 0) ? Mathf.Max(0f, cascadeWeight) : 0f;
+
+        float total = nW + bW + cW;
+        if (total <= 0.0001f)
+        {
+            return null;
+        }
+
+        float r = Random.value * total;
+
+        // pick type
+        if (r < nW && normalPrefabs.Count > 0)
+        {
+            return normalPrefabs[Random.Range(0, normalPrefabs.Count)];
+        }
+        r -= nW;
+
+        if (r < bW && bombPrefabs.Count > 0)
+        {
+            return bombPrefabs[Random.Range(0, bombPrefabs.Count)];
+        }
+        r -= bW;
+
+        if (cascadePrefabs.Count > 0)
+        {
+            return cascadePrefabs[Random.Range(0, cascadePrefabs.Count)];
+        }
+
+        return null;
     }
 
     // common instantiate logic
@@ -192,34 +263,26 @@ public class GameManager : MonoBehaviour
         rt.anchoredPosition = pos;
 
         AdPopup popup = go.GetComponent<AdPopup>();
-
-        // apply extra behaviours only to NORMAL ads
-        if (popup != null && popup.adType == AdPopup.AdType.Normal)
-        {
-            if (Random.value < movingChance)
-                popup.isMovingAd = true;
-
-            if (Random.value < breathingChance)
-                popup.breathing = true;
-
-            if (Random.value < rotatingChance)
-                popup.rotating = true;
-
-            if (Random.value < runAwayChance)
-                popup.runFromCursor = true;
-        }
-
-
-        // randomly assign movement to normal ads only
-        if (popup != null && popup.adType == AdPopup.AdType.Normal)
-        {
-            float roll = Random.value; // 0–1
-            if (roll < movingAdChance)      // if chance succeeds, set as moving ad
-                popup.isMovingAd = true;
-        }
-
         if (popup != null)
+        {
+            // apply extra behaviours only to NORMAL ads
+            if (popup.adType == AdPopup.AdType.Normal)
+            {
+                if (Random.value < movingChance)
+                    popup.isMovingAd = true;
+
+                if (Random.value < breathingChance)
+                    popup.breathing = true;
+
+                if (Random.value < rotatingChance)
+                    popup.rotating = true;
+
+                if (Random.value < runAwayChance)
+                    popup.runFromCursor = true;
+            }
+
             activeAds.Add(popup);
+        }
 
         PlayVirusSpawnSfx();
     }
@@ -227,18 +290,8 @@ public class GameManager : MonoBehaviour
     // spawn N normal ads (used by cascade)
     public void SpawnMultipleNormalAds(int count)
     {
-        List<GameObject> normalPrefabs = new List<GameObject>();
-
-        foreach (var prefab in adPrefabs)
-        {
-            AdPopup p = prefab.GetComponent<AdPopup>();
-            if (p != null && p.adType == AdPopup.AdType.Normal)
-                normalPrefabs.Add(prefab);
-        }
-
         if (normalPrefabs.Count == 0)
         {
-            // fallback: just use all
             for (int i = 0; i < count; i++)
                 SpawnPopup();
             return;
@@ -255,7 +308,7 @@ public class GameManager : MonoBehaviour
     {
         Rect areaRect = popupArea.rect;
         float parentWidth = areaRect.width;
-        float parentHeight = areaRect.height;
+        float parentHeight = popupArea.rect.height;
 
         float halfW = popupRt.rect.width / 2f;
         float halfH = popupRt.rect.height / 2f;
@@ -272,8 +325,8 @@ public class GameManager : MonoBehaviour
     public void SnapPopupInside(RectTransform popupRt)
     {
         Rect areaRect = popupArea.rect;
-        float parentWidth = areaRect.width;
-        float parentHeight = areaRect.height;
+        float parentWidth = popupArea.rect.width;
+        float parentHeight = popupArea.rect.height;
 
         float halfW = popupRt.rect.width / 2f;
         float halfH = popupRt.rect.height / 2f;
