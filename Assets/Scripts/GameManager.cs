@@ -122,7 +122,7 @@ public class GameManager : MonoBehaviour
     public AudioSource fanSource;
     [Range(0f, 1f)] public float fanMinVolume = 0f;
     [Range(0f, 1f)] public float fanMaxVolume = 1f;
-//----- EXPLOSION -----
+    //----- EXPLOSION -----
 
 
     [Header("Explosion FX")]
@@ -137,7 +137,7 @@ public class GameManager : MonoBehaviour
     public float explosionFlashDuration = 0.3f;
 
     [Tooltip("How long it takes for the flash to fade out and game over panel to fade in")]
-    public float gameOverFadeDuration = 0.7f;
+    public float gameOverFadeDuration = 0.7f;  // (not used anymore, but kept)
 
     [Tooltip("How long to fade the fan volume to 0 after game over")]
     public float fanFadeOutDuration = 0.5f;
@@ -147,12 +147,10 @@ public class GameManager : MonoBehaviour
 
     public AudioClip explosionClip;
 
-        // ===== Fade to Black =====
+    // ===== Fade to Black =====
     [Header("Fade to Black")]
     public CanvasGroup fadeToBlackOverlay;
     public float fadeToBlackDuration = 1.4f;
-
-
 
 
     // ---------- INTERNAL STATE ----------
@@ -165,13 +163,17 @@ public class GameManager : MonoBehaviour
     float spawnDifficultyTime = 0f;
     float spawnTimer = 0f;
     bool isGameOver = false;
-    public bool IsGameOver => isGameOver;   // ← ADD THIS
+    public bool IsGameOver => isGameOver;   // ← used by other scripts
 
-// ===== Game Over Fade =====
+    // ===== Game Over Fade =====
     [Header("Game Over Fade")]
     public float gameOverTextFadeDuration = 1.2f;
 
-
+    // hover vars for game over text
+    float gameOverHoverTimer = 0f;
+    Vector2 gameOverBasePos;
+    public float gameOverHoverAmplitude = 8f;
+    public float gameOverHoverSpeed = 1.5f;
 
 
     void Awake()
@@ -199,6 +201,12 @@ public class GameManager : MonoBehaviour
             explosionOverlay.gameObject.SetActive(false);
         }
 
+        // make sure fade-to-black starts invisible but active
+        if (fadeToBlackOverlay != null)
+        {
+            fadeToBlackOverlay.alpha = 0f;
+            fadeToBlackOverlay.gameObject.SetActive(true);
+        }
 
         float best = PlayerPrefs.GetFloat("BestTime", 0f);
         if (bestText != null)
@@ -248,8 +256,12 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
-        return;
+        // when game over: only run hover
+        if (isGameOver)
+        {
+            HoverGameOverText();
+            return;
+        }
 
         float dt = Time.deltaTime;
         elapsedTime += dt;
@@ -261,6 +273,19 @@ public class GameManager : MonoBehaviour
         HandleSpawning(dt);
         HandleTemperature(dt);
         HandlePowerupKeys();
+    }
+
+    // -------- hover animation for game over text --------
+    void HoverGameOverText()
+    {
+        if (gameOverText == null) return;
+
+        gameOverHoverTimer += Time.unscaledDeltaTime * gameOverHoverSpeed;
+        float offsetY = Mathf.Sin(gameOverHoverTimer) * gameOverHoverAmplitude;
+
+        RectTransform rt = gameOverText.rectTransform;
+        rt.anchoredPosition = new Vector2(gameOverBasePos.x,
+                                          gameOverBasePos.y + offsetY);
     }
 
     // ================== SPAWNING ==================
@@ -795,31 +820,18 @@ public class GameManager : MonoBehaviour
         if (shakeRoot != null)
             shakeRoot.anchoredPosition = shakeBasePos;
 
-        // 3) show game over panel and text, but fade it in
-        CanvasGroup goCg = null;
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(true);
-            goCg = gameOverPanel.GetComponent<CanvasGroup>();
-            if (goCg == null) goCg = gameOverPanel.AddComponent<CanvasGroup>();
-            goCg.alpha = 0f;
-        }
-
-        if (gameOverText != null)
-            gameOverText.text = reason + "\n\nsurvived: " + FormatTime(elapsedTime);
-
-        // 4) fade explosion out + game over panel in
+        // 3) fade from explosion white → full black
         t = 0f;
-        while (t < gameOverFadeDuration)
+        while (t < fadeToBlackDuration)
         {
             t += Time.unscaledDeltaTime;
-            float k = Mathf.Clamp01(t / gameOverFadeDuration);
+            float k = Mathf.Clamp01(t / fadeToBlackDuration);
 
             if (explosionOverlay != null)
                 explosionOverlay.alpha = 1f - k;
 
-            if (goCg != null)
-                goCg.alpha = k;
+            if (fadeToBlackOverlay != null)
+                fadeToBlackOverlay.alpha = k;
 
             yield return null;
         }
@@ -830,7 +842,37 @@ public class GameManager : MonoBehaviour
             explosionOverlay.gameObject.SetActive(false);
         }
 
-        // 5) finally, hard freeze everything
+        // 4) now fade in game over panel on top of black
+        CanvasGroup goCg = null;
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+            goCg = gameOverPanel.GetComponent<CanvasGroup>();
+            if (goCg == null) goCg = gameOverPanel.AddComponent<CanvasGroup>();
+            goCg.alpha = 0f;
+        }
+
+        if (gameOverText != null)
+        {
+            gameOverText.text = reason + "\n\nsurvived: " + FormatTime(elapsedTime);
+            // store base pos for hover
+            gameOverBasePos = gameOverText.rectTransform.anchoredPosition;
+            gameOverHoverTimer = 0f;
+        }
+
+        t = 0f;
+        while (t < gameOverTextFadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / gameOverTextFadeDuration);
+
+            if (goCg != null)
+                goCg.alpha = k;
+
+            yield return null;
+        }
+
+        // 5) finally, hard freeze everything (hover uses unscaled time)
         Time.timeScale = 0f;
     }
 
@@ -856,6 +898,7 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

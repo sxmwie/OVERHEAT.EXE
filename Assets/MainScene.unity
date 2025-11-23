@@ -782,10 +782,12 @@ MonoBehaviour:
   gameOverFadeDuration: 0.7
   fanFadeOutDuration: 0.5
   explosionSource: {fileID: 163846608}
-  explosionClip: {fileID: 8300000, guid: 97fe0c9aa458f4d428e8a8e30f3e773f, type: 3}
-  fadeToBlackOverlay: {fileID: 0}
+  explosionClip: {fileID: 8300000, guid: a1f9d91a7c30d3045bc01a374b32501d, type: 3}
+  fadeToBlackOverlay: {fileID: 1990659896}
   fadeToBlackDuration: 1.4
   gameOverTextFadeDuration: 1.2
+  gameOverHoverAmplitude: 8
+  gameOverHoverSpeed: 1.5
 --- !u!4 &163846605
 Transform:
   m_ObjectHideFlags: 0
@@ -2250,9 +2252,9 @@ RectTransform:
   m_Children:
   - {fileID: 86507703}
   - {fileID: 394815475}
-  - {fileID: 331248149}
   - {fileID: 1050963113}
   - {fileID: 1990659893}
+  - {fileID: 331248149}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3900,7 +3902,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
