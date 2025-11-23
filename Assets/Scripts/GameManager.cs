@@ -728,6 +728,10 @@ public class GameManager : MonoBehaviour
             {
                 freezeTimer = 0f;
                 tempFrozen = false;
+
+                // 🔹 tell the bar we are no longer frozen
+                if (tempBar != null)
+                    tempBar.SetFrozen(false);
             }
 
             UpdateTempUI();
@@ -745,6 +749,7 @@ public class GameManager : MonoBehaviour
         if (temp >= tempMax)
             TriggerGameOver("your pc overheated!");
     }
+
 
     void UpdateTempUI()
     {
@@ -923,25 +928,35 @@ public class GameManager : MonoBehaviour
     public void ApplyFreezePowerup(float duration)
     {
         tempFrozen = true;
+
+        // 🔹 bar goes icy blue while frozen
+        if (tempBar != null)
+            tempBar.SetFrozen(true);
+
         freezeTimer = Mathf.Max(freezeTimer, duration);
         ShowPowerupFreezeText();
         UpdateTempUI();
 
-        // play freeze SFX
         PlayPowerupSfx(powerupFreezeClip);
     }
+
 
 
     public void ApplyCoolPowerup(float amount)
     {
         temp -= amount;
         temp = Mathf.Clamp(temp, 0f, tempMax);
+
+        // 🔹 quick blue flash when cooling
+        if (tempBar != null)
+            tempBar.TriggerCoolFlash();
+
         UpdateTempUI();
         ShowPowerupCoolingText();
 
-        // play cool SFX
         PlayPowerupSfx(powerupCoolClip);
     }
+
 
 
     public void ApplyClearAllPowerup()
