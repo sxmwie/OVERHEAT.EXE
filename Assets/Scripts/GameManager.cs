@@ -41,6 +41,19 @@ public class GameManager : MonoBehaviour
     public float difficultyRampPerSecond = 0.004f;
     public float spawnPadding = 10f;
 
+    // ---------- MOVING ----------
+
+    [Header("Moving Ads")]
+    [Range(0f, 1f)] public float movingAdChance = 0.15f; // 15% of normal ads move
+
+    [Header("Ad Behaviours")]
+    [Range(0f, 1f)] public float movingChance = 0.18f;
+    [Range(0f, 1f)] public float breathingChance = 0.25f;
+    [Range(0f, 1f)] public float rotatingChance = 0.18f;
+    [Range(0f, 1f)] public float runAwayChance = 0.10f;
+
+
+
     // ---------- GAME OVER ----------
     [Header("Game Over")]
     public GameObject gameOverPanel;
@@ -179,6 +192,32 @@ public class GameManager : MonoBehaviour
         rt.anchoredPosition = pos;
 
         AdPopup popup = go.GetComponent<AdPopup>();
+
+        // apply extra behaviours only to NORMAL ads
+        if (popup != null && popup.adType == AdPopup.AdType.Normal)
+        {
+            if (Random.value < movingChance)
+                popup.isMovingAd = true;
+
+            if (Random.value < breathingChance)
+                popup.breathing = true;
+
+            if (Random.value < rotatingChance)
+                popup.rotating = true;
+
+            if (Random.value < runAwayChance)
+                popup.runFromCursor = true;
+        }
+
+
+        // randomly assign movement to normal ads only
+        if (popup != null && popup.adType == AdPopup.AdType.Normal)
+        {
+            float roll = Random.value; // 0–1
+            if (roll < movingAdChance)      // if chance succeeds, set as moving ad
+                popup.isMovingAd = true;
+        }
+
         if (popup != null)
             activeAds.Add(popup);
 
