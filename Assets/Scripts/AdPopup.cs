@@ -125,6 +125,9 @@ public class AdPopup : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
+        return;
+        
         float dt = Time.deltaTime;
 
         // ───── auto despawn (bomb/cascade ignored long enough) ─────

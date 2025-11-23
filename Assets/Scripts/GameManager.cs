@@ -1,9 +1,11 @@
+using System.Collections;          // ← ADD THIS
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
+
 
 public class GameManager : MonoBehaviour
 {
@@ -120,6 +122,36 @@ public class GameManager : MonoBehaviour
     public AudioSource fanSource;
     [Range(0f, 1f)] public float fanMinVolume = 0f;
     [Range(0f, 1f)] public float fanMaxVolume = 1f;
+//----- EXPLOSION -----
+
+
+    [Header("Explosion FX")]
+
+    [Tooltip("Full-screen Image with CanvasGroup, used for the explosion flash")]
+    public CanvasGroup explosionOverlay;
+
+    [Tooltip("Extra shake strength during explosion (multiplies shakeMaxAmplitude)")]
+    public float explosionShakeMultiplier = 2f;
+
+    [Tooltip("How long the bright flash lasts (seconds, unscaled time)")]
+    public float explosionFlashDuration = 0.3f;
+
+    [Tooltip("How long it takes for the flash to fade out and game over panel to fade in")]
+    public float gameOverFadeDuration = 0.7f;
+
+    [Tooltip("How long to fade the fan volume to 0 after game over")]
+    public float fanFadeOutDuration = 0.5f;
+
+    [Tooltip("AudioSource for explosion SFX (one-shot)")]
+    public AudioSource explosionSource;
+
+    public AudioClip explosionClip;
+
+    [Header("Fade to Black")]
+    public CanvasGroup fadeToBlackOverlay;     // ← drag FadeToBlackOverlay here
+    public float fadeToBlackDuration = 1.4f;   // how long fading to black takes
+
+
 
     // ---------- INTERNAL STATE ----------
     List<AdPopup> activeAds = new List<AdPopup>();
@@ -131,6 +163,12 @@ public class GameManager : MonoBehaviour
     float spawnDifficultyTime = 0f;
     float spawnTimer = 0f;
     bool isGameOver = false;
+    public bool IsGameOver => isGameOver;   // ← ADD THIS
+
+    [Header("Game Over Fade")]
+    public float gameOverTextFadeDuration = 1.2f;
+
+
 
     void Awake()
     {
@@ -150,8 +188,13 @@ public class GameManager : MonoBehaviour
             if (c != null) canvasRect = c.GetComponent<RectTransform>();
         }
 
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(false);
+        // make sure explosion overlay starts hidden
+        if (explosionOverlay != null)
+        {
+            explosionOverlay.alpha = 0f;
+            explosionOverlay.gameObject.SetActive(false);
+        }
+
 
         float best = PlayerPrefs.GetFloat("BestTime", 0f);
         if (bestText != null)
@@ -201,7 +244,8 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (isGameOver) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
+        return;
 
         float dt = Time.deltaTime;
         elapsedTime += dt;
@@ -689,8 +733,9 @@ public class GameManager : MonoBehaviour
     void TriggerGameOver(string reason)
     {
         if (isGameOver) return;
-        isGameOver = true;
+        isGameOver = true;   // lets other scripts stop immediately
 
+        // update best time immediately
         float best = PlayerPrefs.GetFloat("BestTime", 0f);
         if (elapsedTime > best)
         {
@@ -701,12 +746,109 @@ public class GameManager : MonoBehaviour
         if (bestText != null)
             bestText.text = "best: " + FormatTime(best);
 
+        // start the explosion + fade sequence
+        StartCoroutine(GameOverSequence(reason));
+    }
+
+    IEnumerator GameOverSequence(string reason)
+    {
+        // 1) fade out the fan
+        if (fanSource != null && fanFadeOutDuration > 0f)
+        {
+            StartCoroutine(FadeAudioOut(fanSource, fanFadeOutDuration));
+        }
+
+        // 2) explosion flash + heavy shake + explosion SFX
+        if (explosionOverlay != null)
+        {
+            explosionOverlay.gameObject.SetActive(true);
+            explosionOverlay.alpha = 1f;
+        }
+
+        if (explosionSource != null && explosionClip != null)
+        {
+            explosionSource.PlayOneShot(explosionClip);
+        }
+
+        float t = 0f;
+        while (t < explosionFlashDuration)
+        {
+            t += Time.unscaledDeltaTime;
+
+            // extra shake using existing shakeRoot
+            if (shakeRoot != null)
+            {
+                float k = 1f - Mathf.Clamp01(t / explosionFlashDuration);
+                float amp = shakeMaxAmplitude * explosionShakeMultiplier * k;
+                Vector2 offset = Random.insideUnitCircle * amp;
+                shakeRoot.anchoredPosition = shakeBasePos + offset;
+            }
+
+            yield return null;
+        }
+
+        // reset shake position
+        if (shakeRoot != null)
+            shakeRoot.anchoredPosition = shakeBasePos;
+
+        // 3) show game over panel and text, but fade it in
+        CanvasGroup goCg = null;
         if (gameOverPanel != null)
+        {
             gameOverPanel.SetActive(true);
+            goCg = gameOverPanel.GetComponent<CanvasGroup>();
+            if (goCg == null) goCg = gameOverPanel.AddComponent<CanvasGroup>();
+            goCg.alpha = 0f;
+        }
 
         if (gameOverText != null)
             gameOverText.text = reason + "\n\nsurvived: " + FormatTime(elapsedTime);
+
+        // 4) fade explosion out + game over panel in
+        t = 0f;
+        while (t < gameOverFadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / gameOverFadeDuration);
+
+            if (explosionOverlay != null)
+                explosionOverlay.alpha = 1f - k;
+
+            if (goCg != null)
+                goCg.alpha = k;
+
+            yield return null;
+        }
+
+        if (explosionOverlay != null)
+        {
+            explosionOverlay.alpha = 0f;
+            explosionOverlay.gameObject.SetActive(false);
+        }
+
+        // 5) finally, hard freeze everything
+        Time.timeScale = 0f;
     }
+
+    IEnumerator FadeAudioOut(AudioSource src, float duration)
+    {
+        if (src == null || duration <= 0f) yield break;
+
+        float startVol = src.volume;
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / duration);
+            src.volume = Mathf.Lerp(startVol, 0f, k);
+            yield return null;
+        }
+
+        src.volume = 0f;
+        src.Stop();
+    }
+
 
     public void Restart()
     {

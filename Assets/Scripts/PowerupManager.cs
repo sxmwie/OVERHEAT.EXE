@@ -73,6 +73,9 @@ public class PowerupManager : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
+        return;
+
         if (!active)
         {
             spawnTimer += Time.deltaTime;
