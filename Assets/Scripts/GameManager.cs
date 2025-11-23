@@ -71,6 +71,10 @@ public class GameManager : MonoBehaviour
     [Tooltip("Restart button that breathes on game over")]
     public Button restartButton;
 
+    [Tooltip("Menu button that also breathes on game over")]
+    public Button menuButton;
+
+
 
     // ---------- POWERUP SETTINGS ----------
     [Header("Powerup Effects")]
@@ -224,11 +228,12 @@ public class GameManager : MonoBehaviour
     [Header("Game Over Fade")]
     public float gameOverTextFadeDuration = 1.2f;
 
-    // hover vars for game over texts + button
+    // hover vars for game over texts + buttons
     float gameOverHoverTimer = 0f;
     Vector2 gameOverTitleBasePos;
     Vector2 gameOverSurvivedBasePos;
     Vector3 restartBaseScale;
+    Vector3 menuBaseScale;   // <<< add this
 
     [Tooltip("How far the texts bob up/down")]
     public float gameOverHoverAmplitude = 8f;
@@ -236,8 +241,9 @@ public class GameManager : MonoBehaviour
     [Tooltip("Speed of the hovering motion")]
     public float gameOverHoverSpeed = 1.5f;
 
-    [Tooltip("Max extra scale for restart button breathing")]
+    [Tooltip("Max extra scale for restart/menu button breathing")]
     public float restartBreathAmount = 0.08f;
+
 
 
     void Awake()
@@ -361,7 +367,10 @@ public class GameManager : MonoBehaviour
     void HoverGameOverText()
     {
         // nothing to animate
-        if (gameOverTitleText == null && gameOverSurvivedText == null && restartButton == null)
+        if (gameOverTitleText == null &&
+            gameOverSurvivedText == null &&
+            restartButton == null &&
+            menuButton == null)
             return;
 
         gameOverHoverTimer += Time.unscaledDeltaTime * gameOverHoverSpeed;
@@ -378,7 +387,7 @@ public class GameManager : MonoBehaviour
             );
         }
 
-        // survived line: smaller amplitude + phase shift so it doesn’t move identically
+        // survived line: smaller amplitude + phase shift
         if (gameOverSurvivedText != null)
         {
             float offsetY = Mathf.Sin(s + 0.8f) * (gameOverHoverAmplitude * 0.6f);
@@ -395,7 +404,15 @@ public class GameManager : MonoBehaviour
             float breath = 1f + Mathf.Sin(s * 2f) * restartBreathAmount;
             restartButton.transform.localScale = restartBaseScale * breath;
         }
+
+        // menu button: breathe too (slight phase offset so they don't sync perfectly)
+        if (menuButton != null)
+        {
+            float breath = 1f + Mathf.Sin(s * 2f + 0.7f) * restartBreathAmount;
+            menuButton.transform.localScale = menuBaseScale * breath;
+        }
     }
+
 
 
     // ================== SPAWNING ==================
@@ -1050,6 +1067,24 @@ public class GameManager : MonoBehaviour
             restartBaseScale = restartButton.transform.localScale;
         }
 
+                // menu button (a bit under restart)
+        Vector2 menuPos = new Vector2(0f, -300);   // tweak Y to move it up/down
+
+        if (menuButton != null)
+        {
+            menuButton.gameObject.SetActive(true);
+
+            RectTransform mrt = menuButton.GetComponent<RectTransform>();
+            if (mrt != null)
+                mrt.anchoredPosition = menuPos;
+
+            if (menuButton.transform.localScale == Vector3.zero)
+                menuButton.transform.localScale = Vector3.one;
+
+            menuBaseScale = menuButton.transform.localScale;
+        }
+
+        gameOverHoverTimer = 0f;
 
 
 
@@ -1110,6 +1145,13 @@ public class GameManager : MonoBehaviour
         src.volume = 0f;
         src.pitch  = 0f;
         src.Stop();
+    }
+
+
+    public void Menu()
+    {
+        Time.timeScale = 1f;   // unfreeze
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
 
 
