@@ -1,4 +1,5 @@
 my first game jam project.
+first github repository too..
 
 mini jam 198
 
